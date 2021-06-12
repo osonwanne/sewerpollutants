@@ -7,3 +7,4 @@ dash-table==4.0.2
 Flask==1.1.1
 pandas
 plotly==4.0.0
+xlrd
