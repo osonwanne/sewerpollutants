@@ -9,3 +9,4 @@ pandas
 plotly==4.0.0
 xlrd
 gunicorn
+dash-bootstrap-components
