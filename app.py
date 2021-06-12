@@ -42,7 +42,7 @@ app.layout = html.Div([
 
 @app.callback(
 	Output("barchart", "children"),
-	Input("pollutant-dropdown", "value")
+	[Input("pollutant-dropdown", "value")]
 )
 def filterPollutants(selected_pollutants):
 	if selected_pollutants:
