@@ -24,3 +24,6 @@ app.layout = html.Div([dcc.Graph(id='barchart',
 								yaxis_title_text='Metals ug/L'
 								)}
 						)])
+
+if __name__ == "__main__":
+        app.run_server()
