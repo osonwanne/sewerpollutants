@@ -7,7 +7,8 @@ import pandas as pd
 
 # Load data
 
-df = pd.read_excel('LIMS.xls',index_col=0, parse_dates=True)
+url1 = 'https://sewerpollutants.s3.us-west-2.amazonaws.com/LIMS.xls'
+df = pd.read_excel(url1,index_col=0, parse_dates=True)
 
 # Plot data
 
