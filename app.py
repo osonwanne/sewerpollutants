@@ -11,7 +11,9 @@ df = pd.read_excel('LIMS.xls',index_col=0, parse_dates=True)
 
 # Plot data
 
-app = dash.Dash()
+# app = dash.Dash()
+app = dash.Dash(__name__)
+server = app.server
 
 app.layout = html.Div([dcc.Graph(id='barchart',
 						figure = {'data':[
