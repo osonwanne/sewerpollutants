@@ -5,6 +5,5 @@ dash-html-components==1.0.0
 dash-renderer==1.0.0
 dash-table==4.0.2
 Flask==1.1.1
-pandas==0.23.3
+pandas
 plotly==4.0.0
-Cython==0.29.23
