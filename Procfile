@@ -1,1 +1,1 @@
-web: gunicorn app:server -b localhost:8000
+web: gunicorn app:server --workers 4 -b localhost:8000
