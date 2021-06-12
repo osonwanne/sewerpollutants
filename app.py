@@ -19,7 +19,7 @@ df.sort_values("pollutant_abb", inplace = True)
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 app = dash.Dash(__name__, external_stylesheets = external_stylesheets)
-application = app.server  # for Heroku Pipelines
+server = app.server  # for Heroku Pipelines
 
 app.layout = html.Div([
 	html.Center(html.H2("Sewer Pollutants")),
@@ -62,4 +62,4 @@ def filterPollutants(selected_pollutants):
 	return dcc.Graph(figure = bar_fig)
 
 if __name__ == "__main__":
-        appplication.run(debug=True)
+        app.run_server(debug=True)
