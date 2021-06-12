@@ -46,26 +46,26 @@ app.layout = html.Div([
 )
 def filterPollutants(selected_pollutants):
 	if selected_pollutants:
-		dff = df.loc[df.pollutant_abb.isin(selected_pollutants)]
+		dff = df.loc[df.pollutant_abb.isin([selected_pollutants])]
 	else:
 		dff = df
 	
-	# bar_fig = {'data':[
-	# 		go.Bar(
-	# 		x = dff['U_SAMPLE_DTTM'],
-	# 		y = dff['DISPLAYVALUE'],
-	# 		)], 
-	# 'layout':go.Layout(title='Sampling for Local Limits',
-	# 		# yaxis_range=[0,2],
-	# 		yaxis_title_text='Metals mg/L'
-	# 		)}		
+	bar_fig = {'data':[
+			go.Bar(
+			x = dff['U_SAMPLE_DTTM'],
+			y = dff['DISPLAYVALUE'],
+			)], 
+	'layout':go.Layout(title='Sampling for Local Limits',
+			# yaxis_range=[0,2],
+			yaxis_title_text='Metals mg/L'
+			)}		
 
-	line_fig = px.line(dff, x= "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", template = "simple_white",
-		title = "Sampling for Local Limits")
+	# line_fig = px.line(dff, x= "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb",#  template = "simple_white",
+	# 	title = "Sampling for Local Limits")
 
-	line_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
+	# line_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
 
-	return dcc.Graph(figure = line_fig)
+	return dcc.Graph(figure = bar_fig)
 
 
 
