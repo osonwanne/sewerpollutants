@@ -10,3 +10,4 @@ plotly==4.0.0
 xlrd==2.0.1
 gunicorn
 dash-bootstrap-components==0.12.2
+dash-daq
