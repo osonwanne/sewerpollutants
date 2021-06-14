@@ -7,6 +7,6 @@ dash-table==4.0.2
 Flask==1.1.1
 pandas
 plotly==4.0.0
-xlrd
+xlrd==2.0.1
 gunicorn
 dash-bootstrap-components
