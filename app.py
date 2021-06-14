@@ -46,7 +46,7 @@ app.layout = html.Div([
 )
 def filterPollutants(selected_pollutants):
 	if selected_pollutants:
-		dff = df.loc[df.pollutant_abb.isin([selected_pollutants])]
+		dff = df.loc[df.pollutant_abb.isin(selected_pollutants)]
 	else:
 		dff = df
 	
