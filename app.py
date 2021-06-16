@@ -10,7 +10,7 @@ import dash_daq as daq
 import re, os
 
 # Load data
-url1 = 'https://sewerpollutants.s3.us-west-2.amazonaws.com/LIMS2.xls'
+url1 = 'https://sewerpollutants.s3.us-west-2.amazonaws.com/LIMS1.xls'
 df = pd.read_excel(url1,index_col=0, parse_dates=True)
 # df = pd.read_excel('LIMS.xls',index_col=0, parse_dates=True)
 
