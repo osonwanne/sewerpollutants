@@ -92,7 +92,6 @@ def filterPollutants(selected_pollutants):
 
 	# line_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
 	
-
 	return dcc.Graph(figure = bar_fig)
 
 ####### TAB 2 ##############
