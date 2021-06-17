@@ -3,19 +3,25 @@ from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html 
 import plotly.graph_objects as go
-import plotly.express as px
-import pandas as pd
 import dash_bootstrap_components as dbc
 import dash_daq as daq
-import re, os
+import plotly.express as px
+import pandas as pd
+import re
 
-# Load data
+# Load data  --------------
+## Load Excel data
 url1 = 'https://sewerpollutants.s3.us-west-2.amazonaws.com/LIMS.xls'
 df = pd.read_excel(url1,index_col=0, parse_dates=True)
-# df = pd.read_excel('LIMS.xls',index_col=0, parse_dates=True)
+## Load pollutant limits
+url2 = 'https://sewerpollutants.s3.us-west-2.amazonaws.com/LocalLimits.csv'
+pollutant_limit = pd.read_csv(url2)
 
+# Format data  --------------
 df["pollutant_abb"] = df.PARAMLISTDESC.apply(lambda x: re.sub(" *\-.+", "", x)) # remove -Total Recoverable
 df.sort_values("pollutant_abb", inplace = True)
+
+df = pd.merge(df, pollutant_limit, left_on = "pollutant_abb", right_on = "Metal", how = "inner")
 
 ## New column with company ids
 df["company_id"] = df.SAMPLEDESC.apply(lambda x: re.sub("Site Code ", "", x)) # remove -Total Recoverable
@@ -91,7 +97,7 @@ def filterPollutants(selected_pollutants):
 	# 	title = "Sampling for Local Limits")
 
 	# line_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
-	
+			
 	return dcc.Graph(figure = bar_fig)
 
 ####### TAB 2 ##############
@@ -102,7 +108,7 @@ def filterPollutants(selected_pollutants):
 def filterCompanyB(selected_company):
     if selected_company:
         dff = df.loc[df.SAMPLEDESC.isin([selected_company])]
-        dff["exceeds_limits"] = dff.apply(lambda row: row.DISPLAYVALUE > row.U_QUANTITATION_LIMIT, axis = 1)
+        dff["exceeds_limits"] = dff.apply(lambda row: row.DISPLAYVALUE > row.Limit, axis = 1)
         ## Order pollutants in descending order (% of timepoints exceeding limit)
         dff_aux = dff.groupby("pollutant_abb").exceeds_limits.mean().reset_index()
         pollutant_list = dff_aux.sort_values("exceeds_limits", ascending = False).pollutant_abb
