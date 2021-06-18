@@ -56,7 +56,7 @@ app.layout = html.Div([
                 #--------------- ROW 1-----------------------------
 				dcc.Dropdown(id='company-dropdown-B', 
 					options = [{'label': str(comp), 'value': str(comp)} for comp in df.sort_values("company_id").SAMPLEDESC.unique()], 
-					multi = False, value = "Site Code 1", placeholder = "Select company", className = "ml-3 mr-3 mt-2 mb-2"),
+					multi = False, value = "Site Code 26", placeholder = "Select company", className = "ml-3 mr-3 mt-2 mb-2"),
                 #--------------- ROW 2 (Company stats) -------------------------
                 html.Br(),
                 dbc.Row(html.H4("Percentage of times exceeded"), className = "ml-5", justify = "center"),
