@@ -8,6 +8,7 @@ import dash_daq as daq
 import plotly.express as px
 import pandas as pd
 import re
+from datetime import datetime, timedelta
 
 # Load data  --------------
 ## Load Excel data
@@ -30,6 +31,9 @@ df["company_id"] = df["company_id"].astype(int)
 # Convert display value column to numeric
 df.DISPLAYVALUE = df.DISPLAYVALUE.apply(lambda x: re.sub(">|<", "", x))
 df.DISPLAYVALUE = pd.to_numeric(df.DISPLAYVALUE, errors = "coerce")
+
+# Convert datetime into date
+df["U_SAMPLE_DTTM"] = df["U_SAMPLE_DTTM"].apply(lambda x: x.date())
 
 #%% Dash layout
 
@@ -64,7 +68,16 @@ app.layout = html.Div([
                 dbc.Row(id = "pollutants-gauge-row-B"),
                 dbc.Row([dbc.Button("All pollutants (Expand)", id = "collapse-button-B", color = "primary", className = "mb-3 mt-3 ml-5", )]),
                 dbc.Collapse(dbc.Row(id = "collapse-row-B"), id = "collapse-B"),
-			]) # html.div
+                #--------------- ROW 3 (Company stats) -------------------------
+                html.Hr(),
+                dbc.Row([html.H4("Select pollutant", className = "mb-0"), 
+                         dbc.Button(id = "site-code-lbl-B", outline = True, color = "secondary", className = "ml-3")], 
+                className = "ml-5", justify = "center", align = "center"),
+				dcc.Dropdown(id='pollutant-dropdown-B', 
+					options = [{'label': str(comp), 'value': str(comp)} for comp in df.pollutant_abb.unique()], 
+					multi = False, value = "Arsenic", placeholder = "Select pollutant", className = "ml-3 mr-3 mt-2 mb-2"),
+                dbc.Row(dbc.Col(id = "pollutant-graph-B", width = 10), justify = "center"),
+            ]) # html.div
 		], label = "Pollutants exceeding limit by Company") # dbc.Col dcc.Tab 
         ################## END OF TABS ###################
 	]))
@@ -78,44 +91,70 @@ app.layout = html.Div([
 	[Input("pollutant-dropdown", "value")]
 )
 def filterPollutants(selected_pollutants):
-	if selected_pollutants:
-		dff = df.loc[df.pollutant_abb.isin(selected_pollutants)]
-	else:
-		dff = df
-	
-	bar_fig = {'data':[
-			go.Bar(
-			x = dff['U_SAMPLE_DTTM'],
-			y = dff['DISPLAYVALUE'],
-			)], 
-	'layout':go.Layout(title='Sampling for Local Limits',
-			# yaxis_range=[0,2],
-			yaxis_title_text='Metals mg/L'
-			)}		
-
-	# line_fig = px.line(dff, x= "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb",#  template = "simple_white",
-	# 	title = "Sampling for Local Limits")
-
-	# line_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
-			
-	return dcc.Graph(figure = bar_fig)
+    if selected_pollutants:
+        dff = df.loc[df.pollutant_abb.isin(selected_pollutants)]
+        
+        
+        bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "SAMPLEDESC", title = "Pollutants by type",
+                         labels = {"SAMPLEDESC": "Company"})
+        bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
+        
+        date_buttons2 = [
+            {"count": 1, "step": "month", "stepmode": "backward", "label": "1MTD"},
+            {"count": 6, "step": "month", "stepmode": "backward", "label": "6MTD"},
+            {"count": 12, "step": "month", "stepmode": "backward", "label": "1YTD"},
+            {"count": 12*3, "step": "month", "stepmode": "backward", "label": "3YTD"},
+            {"count": (datetime.now().date() - dff["U_SAMPLE_DTTM"].min()).days, "step": "day", "stepmode": "backward", "label": "ALL"},
+        ]
+        
+        bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}},
+                                "xaxis": {"rangeselector": {"buttons": date_buttons2}, 
+                                          "title": {"text": ""}}})
+        
+        return dcc.Graph(figure = bar_fig)
+        
+    else:
+        bar_fig = px.bar(df, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
+                         labels = {"pollutant_abb": "Pollutant"})
+        
+        date_buttons = [
+            {"count": 1, "step": "month", "stepmode": "backward", "label": "1MTD"},
+            {"count": 6, "step": "month", "stepmode": "backward", "label": "6MTD"},
+            {"count": 12, "step": "month", "stepmode": "backward", "label": "1YTD"},
+            {"count": 12*3, "step": "month", "stepmode": "backward", "label": "3YTD"},
+            {"count": (datetime.now().date() - df["U_SAMPLE_DTTM"].min()).days, "step": "day", "stepmode": "backward", "label": "ALL"},
+        ]
+        
+        bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}},
+                               "xaxis": {"rangeselector": {"buttons": date_buttons}, 
+                                         "title": {"text": " "}}})
+        
+        return dcc.Graph(figure = bar_fig)
 
 ####### TAB 2 ##############
 @app.callback(
-	[Output("pollutants-gauge-row-B", "children"), Output("collapse-row-B", "children")],
-	Input("company-dropdown-B", "value")
+	[Output("pollutants-gauge-row-B", "children"), 
+    Output("collapse-row-B", "children"),
+	Output("pollutant-graph-B", "children"),
+     Output("site-code-lbl-B", "children")],
+	[Input("company-dropdown-B", "value"), Input("pollutant-dropdown-B", "value")]
 )
-def filterCompanyB(selected_company):
+def filterCompanyB(selected_company, selected_pollutant):
     if selected_company:
-        dff = df.loc[df.SAMPLEDESC.isin([selected_company])]
-        dff["exceeds_limits"] = dff.apply(lambda row: row.DISPLAYVALUE > row.Limit, axis = 1)
-        ## Order pollutants in descending order (% of timepoints exceeding limit)
-        dff_aux = dff.groupby("pollutant_abb").exceeds_limits.mean().reset_index()
-        pollutant_list = dff_aux.sort_values("exceeds_limits", ascending = False).pollutant_abb
-        
-        POLLUTANT_STATS = [] # Container that will hold the gauge Divs
-        POLLUTANT_COLLAPSE = [] # Container that will hold the gauge Divs in excess of the top 6
-        
+        if selected_pollutant:
+            dff = df.loc[df.SAMPLEDESC.isin([selected_company])]
+            dff["exceeds_limits"] = dff.apply(lambda row: row.DISPLAYVALUE > row.Limit, axis = 1)
+            ## Order pollutants in descending order (% of timepoints exceeding limit)
+            dff_aux = dff.groupby("pollutant_abb").exceeds_limits.mean().reset_index()
+            pollutant_list = dff_aux.sort_values("exceeds_limits", ascending = False).pollutant_abb
+            
+            btn_lbl = selected_company
+            
+            # ------------ Pollutant gauges -------------
+            POLLUTANT_STATS = [] # Container that will hold the gauge Divs
+            POLLUTANT_COLLAPSE = [] # Container that will hold the gauge Divs in excess of the top 6
+            gauge_color ={"gradient":True,"ranges":{"green":[0,30],"yellow":[30,60],"red":[60,100]}} # Customize the color of the gauges
+      
         for pollutant in pollutant_list:
             dff_filt = dff.loc[dff.pollutant_abb == pollutant]
             pctg_exceeded = dff_filt.exceeds_limits.mean() * 100
@@ -138,14 +177,32 @@ def filterCompanyB(selected_company):
                         dbc.Row([html.H6(pollutant)], justify = "center"),
                         dbc.Row([
                             daq.Gauge(value = pctg_exceeded, min = 0, max = 100, size = 170, 
-                                           label = str(int(pctg_exceeded)) + "%",  labelPosition = "bottom",
-                                           className = "ml-3 mr-3")
+                                            label = str(int(pctg_exceeded)) + "%",  labelPosition = "bottom",
+                                            className = "ml-3 mr-3")
                         ], justify = "center")
                     ], width = 3) # 2nd Row (Gauge)
                 )
+               
+            # ------------ Pollutant graph -------------
+            if selected_pollutant:
+                dff_pol = dff.loc[dff.pollutant_abb == selected_pollutant]
+            else:
+                dff_pol = dff
+                
+            dff_pol = dff_pol.sort_values("U_SAMPLE_DTTM").reset_index(drop = True)
             
-        return POLLUTANT_STATS, POLLUTANT_COLLAPSE
-        
+            # PX FIG
+            # fig_trend = px.line(dff_pol, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE")
+            # fig_trend.update_layout({"xaxis": {"title": {"text": "Sample Datetime"}}, "yaxis": {"title": {"text": "Allowed limit (mg/L)"}}})
+             
+            # GO FIG
+            fig_trend = go.Figure()
+            fig_trend.add_trace(go.Scatter(x = dff_pol.U_SAMPLE_DTTM, y = dff_pol.DISPLAYVALUE, mode = "lines+markers")) # name = "first"
+            fig_trend.add_trace(go.Scatter(x = dff_pol.U_SAMPLE_DTTM, y = dff_pol.Limit, line = dict(dash = "dash"), mode = "lines"))
+            fig_trend.update_layout(xaxis_title = "Date", yaxis_title = "Mg/L", showlegend=False) # title = "Title", 
+            
+            return POLLUTANT_STATS, POLLUTANT_COLLAPSE, dcc.Graph(figure = fig_trend), btn_lbl
+  
 # Collapse button functionality
 @app.callback(Output("collapse-B", "is_open"),
               [Input("collapse-button-B", "n_clicks")],
