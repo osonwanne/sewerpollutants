@@ -75,7 +75,7 @@ app.layout = html.Div([
                 className = "ml-5", justify = "center", align = "center"),
 				dcc.Dropdown(id='pollutant-dropdown-B', 
 					options = [{'label': str(comp), 'value': str(comp)} for comp in df.pollutant_abb.unique()], 
-					multi = False, value = "Arsenic", placeholder = "Select pollutant", className = "ml-3 mr-3 mt-2 mb-2"),
+					multi = False, value = "Nickel", placeholder = "Select pollutant", className = "ml-3 mr-3 mt-2 mb-2"),
                 dbc.Row(dbc.Col(id = "pollutant-graph-B", width = 10), justify = "center"),
             ]) # html.div
 		], label = "Pollutants exceeding limit by Company") # dbc.Col dcc.Tab 
