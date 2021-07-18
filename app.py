@@ -1,7 +1,8 @@
 import dash
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
-import dash_html_components as html 
+import dash_html_components as html
+from dash_html_components.Div import Div 
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 import dash_daq as daq
@@ -12,11 +13,11 @@ from datetime import datetime, timedelta
 
 # Load data  --------------
 ## Load Excel data
-url1 = 'https://sewerpollutants.s3.us-west-2.amazonaws.com/LIMS.xls'
-df = pd.read_excel(url1,index_col=0, parse_dates=True)
+# url1 = 'https://sewerpollutants.s3.us-west-2.amazonaws.com/LIMS.xls'
+df = pd.read_excel('LIMS.xls',index_col=0, parse_dates=True)
 ## Load pollutant limits
-url2 = 'https://sewerpollutants.s3.us-west-2.amazonaws.com/LocalLimits.csv'
-pollutant_limit = pd.read_csv(url2)
+# url2 = 'https://sewerpollutants.s3.us-west-2.amazonaws.com/LocalLimits.csv'
+pollutant_limit = pd.read_csv('LocalLimits.csv')
 
 # Format data  --------------
 df["pollutant_abb"] = df.PARAMLISTDESC.apply(lambda x: re.sub(" *\-.+", "", x)) # remove -Total Recoverable
@@ -78,11 +79,58 @@ app.layout = html.Div([
 					multi = False, value = "Nickel", placeholder = "Select pollutant", className = "ml-3 mr-3 mt-2 mb-2"),
                 dbc.Row(dbc.Col(id = "pollutant-graph-B", width = 10), justify = "center"),
             ]) # html.div
-		], label = "Pollutants exceeding limit by Company") # dbc.Col dcc.Tab 
+		], label = "Pollutants exceeding limit by Company"), # dbc.Col dcc.Tab 
+        ################## TAB C ###################
+        # dcc.Tab([
+        #     html.Div([
+        #         #--------------- ROW 1-----------------------------
+		# 		dcc.Dropdown(id='company-dropdown-C', 
+		# 			options = [{'label': str(comp), 'value': str(comp)} for comp in df.sort_values("company_id").SAMPLEDESC.unique()], 
+		# 			multi = False, value = "Site Code 26", placeholder = "Select company", className = "ml-3 mr-3 mt-2 mb-2"),
+        #        #--------------- ROW 2-----------------------------
+        #         dbc.Row([
+        #             # Time series graph showing in dot diagram the daily average concentrations of the selected pollutant with local limits for each company exceeding it, and the number of times exceeded.
+        #             dbc.Col([
+        #                 dcc.Graph(id = "time-series-graph", className = "col-12", figure = {
+        #                     "data": [
+        #                         {
+        #                             "x": df.U_SAMPLE_DTTM,
+        #                             "y": df.DISPLAYVALUE,
+        #                             "text": df.PARAMLISTDESC,
+        #                             "name": "Sample",
+        #                             "mode": "markers",
+        #                             "marker": {
+        #                                 "size": df.DISPLAYVALUE,
+        #                                 "color": df.PARAMLISTDESC,
+        #                                 "colorscale": "Viridis",
+        #                                 "showscale": True
+        #                             }
+        #                         }
+        #                     ],
+        #                     "layout": {
+        #                         "title": "Time Series Graph",
+        #                         "xaxis": {"title": "Date"},
+        #                         "yaxis": {"title": "Pollutant mg/L"}
+        #                     }
+        #                 }), 
+        #             ], className = "col-12"),                   
+        #         ], className = "row"),
+        #         #--------------- ROW 3 (Company stats) -------------------------
+        #         html.Hr(),
+        #         dbc.Row([html.H4("Select pollutant", className = "mb-0"), 
+        #                  dbc.Button(id = "site-code-lbl-C", outline = True, color = "secondary", className = "ml-3")], 
+        #         className = "ml-5", justify = "center", align = "center"),
+		# 		dcc.Dropdown(
+        #             id='pollutant-dropdown-C', 
+		# 			options = [{'label': str(comp), 'value': str(comp)} for comp in df.pollutant_abb.unique()], 
+		# 			multi = False, value = "Nickel", placeholder = "Select pollutant", className = "ml-3 mr-3 mt-2 mb-2"),
+        #         dbc.Row(dbc.Col(id = "pollutant-graph-C", width = 10), justify = "center"),
+        #     ]) # html.div
+        # ], label = "Time-Series Forecasting")
+
         ################## END OF TABS ###################
 	]))
 ])
-
 
 #%% Callbacks
 ####### TAB 1 ##############
@@ -130,6 +178,16 @@ def filterPollutants(selected_pollutants):
                                          "title": {"text": " "}}})
         
         return dcc.Graph(figure = bar_fig)
+
+#%%add a boolean swith for the graph such that when it is on only values that are above the local limit are shown
+
+def update_graph_B(selected_pollutant, n_clicks, is_open):
+    if selected_pollutant:
+        dff = df.loc[df.pollutant_abb.isin(selected_pollutant)]
+        dff = dff.loc[dff.DISPLAYVALUE > dff.LOCALVALUE]
+        
+        # bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
+
 
 ####### TAB 2 ##############
 @app.callback(
@@ -196,13 +254,59 @@ def filterCompanyB(selected_company, selected_pollutant):
             # fig_trend.update_layout({"xaxis": {"title": {"text": "Sample Datetime"}}, "yaxis": {"title": {"text": "Allowed limit (mg/L)"}}})
              
             # GO FIG
+            # fig_trend = go.Figure()
+            # fig_trend.add_trace(go.Scatter(x = dff_pol.U_SAMPLE_DTTM, y = dff_pol.DISPLAYVALUE, mode = "lines+markers")) # name = "first"
+            # fig_trend.add_trace(go.Scatter(x = dff_pol.U_SAMPLE_DTTM, y = dff_pol.Limit, line = dict(dash = "dash"), mode = "lines"))
+            # fig_trend.update_layout(xaxis_title = "Date", yaxis_title = "Mg/L", showlegend=False) # title = "Title", 
+
+            #create a Histogram graph figure with dotted line of Local Limit 
             fig_trend = go.Figure()
-            fig_trend.add_trace(go.Scatter(x = dff_pol.U_SAMPLE_DTTM, y = dff_pol.DISPLAYVALUE, mode = "lines+markers")) # name = "first"
-            fig_trend.add_trace(go.Scatter(x = dff_pol.U_SAMPLE_DTTM, y = dff_pol.Limit, line = dict(dash = "dash"), mode = "lines"))
-            fig_trend.update_layout(xaxis_title = "Date", yaxis_title = "Mg/L", showlegend=False) # title = "Title", 
-            
+            fig_trend.add_trace(go.Histogram(x = dff_pol.DISPLAYVALUE, opacity = 0.75, name = "All values"))
+            fig_trend.add_vline(x= dff_pol.Limit[0], line_width = 3, line_dash = "dash", line_color = "red")
+            fig_trend.update_layout(xaxis_title = "Mg/L", yaxis_title = "Count", showlegend=False, template = "simple_white") # title = "Title",
+            fig_trend.update_xaxes(range = [0, max(dff_pol.DISPLAYVALUE.max(), dff_pol.Limit[0] * 1.1)])
             return POLLUTANT_STATS, POLLUTANT_COLLAPSE, dcc.Graph(figure = fig_trend), btn_lbl
-  
+
+
+####### TAB 3 ##############
+# @app.callback(
+#     Output("time-series-graph", "figure"), 
+#     # Output("time-series-graph-div", "children"),
+#     [Input("company-dropdown-C", "value"), 
+#     # Input("pollutant-dropdown-C", "value")
+#     ]
+# )
+
+# create function to update Time series graph in Tab 3 showing intervals of years 
+# def update_graph_time_series(selected_company):
+#     dff = df.loc[df.SAMPLEDESC.isin([selected_company])]
+#     dff = dff.sort_values("U_SAMPLE_DTTM").reset_index(drop = True)
+#     dff_aux = dff.groupby("U_SAMPLE_DTTM").agg({"DISPLAYVALUE": "mean"})
+#     dff_aux = dff_aux.reset_index()
+#     dff_aux = dff_aux.rename(columns = {"DISPLAYVALUE": "Mean"})
+#     dff_aux = dff_aux.sort_values("U_SAMPLE_DTTM").reset_index(drop = True)
+#     dff_aux = dff_aux.rename(columns = {"U_SAMPLE_DTTM": "Date"})
+#     dff_aux = dff_aux.rename(columns = {"Mean": "Mean value"})
+#     dff_aux = dff_aux.set_index("Date")
+#     dff_aux = dff_aux.dropna()
+#     dff_aux = dff_aux.reset_index()
+#     dff_aux = dff_aux.rename(columns = {"index": "Date"})
+#     return dcc.Graph(figure=dff_aux)
+    
+#     # return dcc.Graph(figure = 
+#     #     go.Figure(  
+#     #         data = [go.Scatter(x = dff_aux["Date"], y = dff_aux["Mean value"], mode = "lines")],
+#     #         layout = go.Layout(
+#     #             title = "Time series graph",
+#     #             xaxis = {"title": "Date"},
+#     #             yaxis = {"title": "Mean value"},
+#     #             showlegend = False,
+#     #             template = "simple_white"
+#     #         )
+#     #     )
+#     # )
+
+
 # Collapse button functionality
 @app.callback(Output("collapse-B", "is_open"),
               [Input("collapse-button-B", "n_clicks")],
@@ -213,6 +317,5 @@ def toggle_collapse(n, is_open):
     return is_open
 
 
-#%%
 if __name__ == "__main__":
         app.run_server(debug=True)
