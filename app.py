@@ -266,6 +266,14 @@ def filterCompanyB(selected_company, selected_pollutant):
             fig_trend.update_layout(xaxis_title = "Mg/L", yaxis_title = "Count", showlegend=False, template = "simple_white") # title = "Title",
             fig_trend.update_xaxes(range = [0, max(dff_pol.DISPLAYVALUE.max(), dff_pol.Limit[0] * 1.1)])
             return POLLUTANT_STATS, POLLUTANT_COLLAPSE, dcc.Graph(figure = fig_trend), btn_lbl
+# Collapse button functionality
+@app.callback(Output("collapse-B", "is_open"),
+              [Input("collapse-button-B", "n_clicks")],
+              [State("collapse-B", "is_open")])
+def toggle_collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
 
 ####### TAB 3 ##############
@@ -307,14 +315,6 @@ def filterCompanyB(selected_company, selected_pollutant):
 #     # )
 
 
-# Collapse button functionality
-@app.callback(Output("collapse-B", "is_open"),
-              [Input("collapse-button-B", "n_clicks")],
-              [State("collapse-B", "is_open")])
-def toggle_collapse(n, is_open):
-    if n:
-        return not is_open
-    return is_open
 
 
 if __name__ == "__main__":
