@@ -53,7 +53,17 @@ app.layout = html.Div([
 					options = [{'label': str(pltn), 'value': str(pltn)} for pltn in df.pollutant_abb.unique()], 
 					multi = True, className = "ml-3 mr-3 mt-2", placeholder = "Select pollutant(s)"),
 				html.Div(dcc.Loading(id = 'barchart'))  # or dbc.Spinner
-			]) # html.div
+			]), # html.div
+            ## Add a boolean swith for the graph such that when it is on only values that are above the local limit are shown
+            html.Div([
+                daq.BooleanSwitch(
+                    id='my-boolean-switch',
+                    on=True,
+                    color="#9B51E0",
+                    label="Show/Hide only Over Local Limit" 
+                ),
+            html.Div(id='boolean-switch-output')
+            ])
 		], label = "EPA metal Pollutants of Concern (POC)"), # dbc.Col dcc.Tab
         ################## TAB B ###################
 		dcc.Tab([
@@ -136,17 +146,26 @@ app.layout = html.Div([
 ####### TAB 1 ##############
 @app.callback(
 	Output("barchart", "children"),
-	[Input("pollutant-dropdown", "value")]
+    # Output('boolean-switch-output', 'children'),
+	[Input("pollutant-dropdown", "value")],
+    [Input('my-boolean-switch', 'on')]
 )
-def filterPollutants(selected_pollutants):
+def filterPollutants(selected_pollutants, my_boolean_switch):
     if selected_pollutants:
         dff = df.loc[df.pollutant_abb.isin(selected_pollutants)]
         
+        if my_boolean_switch:
         
-        bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "SAMPLEDESC", title = "Pollutants by type",
-                         labels = {"SAMPLEDESC": "Company"})
-        bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
+            bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE" if df.DISPLAYVALUE > df.Limit else None, color = "SAMPLEDESC", title = "Pollutants by type",
+                            labels = {"SAMPLEDESC": "Company"})
         
+        else:
+
+            bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "SAMPLEDESC", title = "Pollutants by type",
+                        labels = {"SAMPLEDESC": "Company"})
+        
+        # bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
+
         date_buttons2 = [
             {"count": 1, "step": "month", "stepmode": "backward", "label": "1MTD"},
             {"count": 6, "step": "month", "stepmode": "backward", "label": "6MTD"},
@@ -158,6 +177,7 @@ def filterPollutants(selected_pollutants):
         bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}},
                                 "xaxis": {"rangeselector": {"buttons": date_buttons2}, 
                                           "title": {"text": ""}}})
+            
         
         return dcc.Graph(figure = bar_fig)
         
@@ -179,8 +199,6 @@ def filterPollutants(selected_pollutants):
         
         return dcc.Graph(figure = bar_fig)
 
-#%%add a boolean swith for the graph such that when it is on only values that are above the local limit are shown
-
 def update_graph_B(selected_pollutant, n_clicks, is_open):
     if selected_pollutant:
         dff = df.loc[df.pollutant_abb.isin(selected_pollutant)]
@@ -189,6 +207,14 @@ def update_graph_B(selected_pollutant, n_clicks, is_open):
         # bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
 
 
+def update_graph_B(my_boolean_switch):
+    if my_boolean_switch:
+        bar_fig = px.bar(df, y = "DISPLAYVALUE" if df.DISPLAYVALUE > df.Limit else None)
+        return dcc.Graph(figure = bar_fig)
+    else:
+        bar_fig = px.bar(df, y = "DISPLAYVALUE")
+        return dcc.Graph(figure = bar_fig)
+            
 ####### TAB 2 ##############
 @app.callback(
 	[Output("pollutants-gauge-row-B", "children"), 
