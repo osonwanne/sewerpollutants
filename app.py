@@ -182,11 +182,15 @@ def filterPollutants(selected_pollutants, my_boolean_switch):
         
     else:
         if my_boolean_switch:
-            bar_fig = px.bar(df.loc[df.DISPLAYVALUE > df.Limit], x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
-                             labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
+            bar_fig = px.bar(df.loc[df.DISPLAYVALUE > df.Limit], x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", 
+                            hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],
+                            color = "pollutant_abb", title = "Pollutants by type",
+                            labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
         else:
-            bar_fig = px.bar(df, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
-                             labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
+            bar_fig = px.bar(df, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", 
+                            hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],    
+                            color = "pollutant_abb", title = "Pollutants by type",
+                            labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
         
         date_buttons = [
             {"count": 1, "step": "month", "stepmode": "backward", "label": "1MTD"},
