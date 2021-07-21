@@ -148,20 +148,20 @@ app.layout = html.Div([
 	Output("barchart", "children"),
     # Output('boolean-switch-output', 'children'),
 	[Input("pollutant-dropdown", "value"), Input('my-boolean-switch', 'on')]
-									  
 )
 def filterPollutants(selected_pollutants, my_boolean_switch):
     if selected_pollutants:
         dff = df.loc[df.pollutant_abb.isin(selected_pollutants)]
         
         if my_boolean_switch:
-		
-            bar_fig = px.bar(dff.loc[dff.DISPLAYVALUE > dff.Limit], x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "SAMPLEDESC", title = "Pollutants by type",
+            bar_fig = px.bar(dff.loc[dff.DISPLAYVALUE > dff.Limit], x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", 
+                            hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],
+                            color = "SAMPLEDESC", title = "Pollutants by type",
                             labels = {"SAMPLEDESC": "Company"}, template = "simple_white")
-		
         else:
-
-            bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "SAMPLEDESC", title = "Pollutants by type",
+            bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", 
+                        hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],
+                        color = "SAMPLEDESC", title = "Pollutants by type",
                         labels = {"SAMPLEDESC": "Company"}, template = "simple_white")
         
         # bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
@@ -177,19 +177,6 @@ def filterPollutants(selected_pollutants, my_boolean_switch):
         bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}},
                                 "xaxis": {"rangeselector": {"buttons": date_buttons2}, 
                                           "title": {"text": ""}}})
-        
-																		   
-															   
-			
-																  
-															  
-
-																							
-																																																 
-																																								 
-
-																											 
-																									
 
         return dcc.Graph(figure = bar_fig)
         
