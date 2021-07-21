@@ -60,7 +60,7 @@ app.layout = html.Div([
                     id='my-boolean-switch',
                     on=True,
                     color="#9B51E0",
-                    label="Show/Hide only Over Local Limit" 
+                    label="Show/Hide only Over Local Limit"
                 ),
             html.Div(id='boolean-switch-output')
             ])
@@ -147,22 +147,22 @@ app.layout = html.Div([
 @app.callback(
 	Output("barchart", "children"),
     # Output('boolean-switch-output', 'children'),
-	[Input("pollutant-dropdown", "value")],
-    [Input('my-boolean-switch', 'on')]
+	[Input("pollutant-dropdown", "value"), Input('my-boolean-switch', 'on')]
+									  
 )
 def filterPollutants(selected_pollutants, my_boolean_switch):
     if selected_pollutants:
         dff = df.loc[df.pollutant_abb.isin(selected_pollutants)]
         
         if my_boolean_switch:
-        
-            bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE" if df.DISPLAYVALUE > df.Limit else None, color = "SAMPLEDESC", title = "Pollutants by type",
-                            labels = {"SAMPLEDESC": "Company"})
-        
+		
+            bar_fig = px.bar(dff.loc[dff.DISPLAYVALUE > dff.Limit], x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "SAMPLEDESC", title = "Pollutants by type",
+                            labels = {"SAMPLEDESC": "Company"}, template = "simple_white")
+		
         else:
 
             bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "SAMPLEDESC", title = "Pollutants by type",
-                        labels = {"SAMPLEDESC": "Company"})
+                        labels = {"SAMPLEDESC": "Company"}, template = "simple_white")
         
         # bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
 
@@ -177,13 +177,29 @@ def filterPollutants(selected_pollutants, my_boolean_switch):
         bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}},
                                 "xaxis": {"rangeselector": {"buttons": date_buttons2}, 
                                           "title": {"text": ""}}})
-            
         
+																		   
+															   
+			
+																  
+															  
+
+																							
+																																																 
+																																								 
+
+																											 
+																									
+
         return dcc.Graph(figure = bar_fig)
         
     else:
-        bar_fig = px.bar(df, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
-                         labels = {"pollutant_abb": "Pollutant"})
+        if my_boolean_switch:
+            bar_fig = px.bar(df.loc[df.DISPLAYVALUE > df.Limit], x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
+                             labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
+        else:
+            bar_fig = px.bar(df, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
+                             labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
         
         date_buttons = [
             {"count": 1, "step": "month", "stepmode": "backward", "label": "1MTD"},
@@ -199,21 +215,21 @@ def filterPollutants(selected_pollutants, my_boolean_switch):
         
         return dcc.Graph(figure = bar_fig)
 
-def update_graph_B(selected_pollutant, n_clicks, is_open):
-    if selected_pollutant:
-        dff = df.loc[df.pollutant_abb.isin(selected_pollutant)]
-        dff = dff.loc[dff.DISPLAYVALUE > dff.LOCALVALUE]
+# def update_graph_B(selected_pollutant, n_clicks, is_open):
+#     if selected_pollutant:
+#         dff = df.loc[df.pollutant_abb.isin(selected_pollutant)]
+#         dff = dff.loc[dff.DISPLAYVALUE > dff.LOCALVALUE]
         
-        # bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
+#         # bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
 
 
-def update_graph_B(my_boolean_switch):
-    if my_boolean_switch:
-        bar_fig = px.bar(df, y = "DISPLAYVALUE" if df.DISPLAYVALUE > df.Limit else None)
-        return dcc.Graph(figure = bar_fig)
-    else:
-        bar_fig = px.bar(df, y = "DISPLAYVALUE")
-        return dcc.Graph(figure = bar_fig)
+# def update_graph_B(my_boolean_switch):
+#     if my_boolean_switch:
+#         bar_fig = px.bar(df, y = "DISPLAYVALUE" if df.DISPLAYVALUE > df.Limit else None)
+#         return dcc.Graph(figure = bar_fig)
+#     else:
+#         bar_fig = px.bar(df, y = "DISPLAYVALUE")
+#         return dcc.Graph(figure = bar_fig)
             
 ####### TAB 2 ##############
 @app.callback(
