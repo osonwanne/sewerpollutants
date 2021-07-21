@@ -36,6 +36,11 @@ df.DISPLAYVALUE = pd.to_numeric(df.DISPLAYVALUE, errors = "coerce")
 # Convert datetime into date
 df["U_SAMPLE_DTTM"] = df["U_SAMPLE_DTTM"].apply(lambda x: x.date())
 
+# Add 'exceeds_limits' variable column
+df["exceeds_limits"] = df.apply(lambda row: row.DISPLAYVALUE > row.Limit, axis = 1)
+infringing_companies = df.groupby("SAMPLEDESC").exceeds_limits.sum().reset_index()
+infringing_companies = infringing_companies.loc[infringing_companies.exceeds_limits > 0, "SAMPLEDESC"].tolist()
+
 #%% Dash layout
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
@@ -70,14 +75,14 @@ app.layout = html.Div([
 			html.Div([
                 #--------------- ROW 1-----------------------------
 				dcc.Dropdown(id='company-dropdown-B', 
-					options = [{'label': str(comp), 'value': str(comp)} for comp in df.sort_values("company_id").SAMPLEDESC.unique()], 
+					options = [{'label': str(comp), 'value': str(comp)} for comp in df.loc[df.SAMPLEDESC.isin(infringing_companies)].sort_values("company_id").SAMPLEDESC.unique()], 
 					multi = False, value = "Site Code 26", placeholder = "Select company", className = "ml-3 mr-3 mt-2 mb-2"),
                 #--------------- ROW 2 (Company stats) -------------------------
                 html.Br(),
                 dbc.Row(html.H4("Percentage of times exceeded"), className = "ml-5", justify = "center"),
                 html.Br(),
                 dbc.Row(id = "pollutants-gauge-row-B"),
-                dbc.Row([dbc.Button("All pollutants (Expand)", id = "collapse-button-B", color = "primary", className = "mb-3 mt-3 ml-5", )]),
+                dbc.Row([dbc.Button("All pollutants (Expand)", id = "collapse-button-B", color = "secondary", className = "mb-3 mt-3 ml-5", disabled = True)]),
                 dbc.Collapse(dbc.Row(id = "collapse-row-B"), id = "collapse-B"),
                 #--------------- ROW 3 (Company stats) -------------------------
                 html.Hr(),
@@ -182,15 +187,13 @@ def filterPollutants(selected_pollutants, my_boolean_switch):
         
     else:
         if my_boolean_switch:
-            bar_fig = px.bar(df.loc[df.DISPLAYVALUE > df.Limit], x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", 
-                            hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],
-                            color = "pollutant_abb", title = "Pollutants by type",
-                            labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
+            bar_fig = px.bar(df.loc[df.DISPLAYVALUE > df.Limit], x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
+                             hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],
+                             labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
         else:
-            bar_fig = px.bar(df, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", 
-                            hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],    
-                            color = "pollutant_abb", title = "Pollutants by type",
-                            labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
+            bar_fig = px.bar(df, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
+                             hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],
+                             labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
         
         date_buttons = [
             {"count": 1, "step": "month", "stepmode": "backward", "label": "1MTD"},
@@ -234,8 +237,6 @@ def filterCompanyB(selected_company, selected_pollutant):
     if selected_company:
         if selected_pollutant:
             dff = df.loc[df.SAMPLEDESC.isin([selected_company])]
-            dff["exceeds_limits"] = dff.apply(lambda row: row.DISPLAYVALUE > row.Limit, axis = 1)
-            ## Order pollutants in descending order (% of timepoints exceeding limit)
             dff_aux = dff.groupby("pollutant_abb").exceeds_limits.mean().reset_index()
             pollutant_list = dff_aux.sort_values("exceeds_limits", ascending = False).pollutant_abb
             
