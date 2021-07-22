@@ -157,17 +157,16 @@ app.layout = html.Div([
 def filterPollutants(selected_pollutants, my_boolean_switch):
     if selected_pollutants:
         dff = df.loc[df.pollutant_abb.isin(selected_pollutants)]
-        
+        dff.rename(columns = {"U_SAMPLE_DTTM": "Date", "DISPLAYVALUE": "Metals (mg/L)", "SAMPLEDESC" : "Company", 
+                              "pollutant_abb": "Pollutant"}, inplace = True)
         if my_boolean_switch:
-            bar_fig = px.bar(dff.loc[dff.DISPLAYVALUE > dff.Limit], x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", 
-                            hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],
-                            color = "SAMPLEDESC", title = "Pollutants by type",
-                            labels = {"SAMPLEDESC": "Company"}, template = "simple_white")
+            bar_fig = px.bar(dff.loc[dff.DISPLAYVALUE > dff.Limit], x = "Date", y = "Metals (mg/L)",
+                             hover_data=['Pollutant', 'Company', 'Date', 'Metals (mg/L)','Limit'],
+                             color = "Company", title = "Pollutants by type", template = "simple_white")
         else:
-            bar_fig = px.bar(dff, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", 
-                        hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],
-                        color = "SAMPLEDESC", title = "Pollutants by type",
-                        labels = {"SAMPLEDESC": "Company"}, template = "simple_white")
+            bar_fig = px.bar(dff, x = "Date", y = "Metals (mg/L)", 
+                        hover_data=["Pollutant", "Company", 'Date', "Metals (mg/L)",'Limit'],
+                        color = "Company", title = "Pollutants by type", template = "simple_white")
         
         # bar_fig.update_layout({"yaxis": {"title": {"text": "Metals mg/L"}}})
 
@@ -186,14 +185,17 @@ def filterPollutants(selected_pollutants, my_boolean_switch):
         return dcc.Graph(figure = bar_fig)
         
     else:
+        dfx = df.rename(columns = {"U_SAMPLE_DTTM": "Date", "DISPLAYVALUE": "Metals (mg/L)", "SAMPLEDESC" : "Company", 
+                                    "pollutant_abb": "Pollutant"})
         if my_boolean_switch:
-            bar_fig = px.bar(df.loc[df.DISPLAYVALUE > df.Limit], x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
-                             hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],
-                             labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
+            bar_fig = px.bar(dfx.loc[dfx["Metals (mg/L)"] > dfx.Limit], 
+                             x = "Date", y = "Metals (mg/L)", color = "Pollutant", title = "Pollutants by type",
+                             hover_data=['Pollutant', 'Company', 'Date', "Metals (mg/L)",'Limit'],
+                             template = "simple_white")
         else:
-            bar_fig = px.bar(df, x = "U_SAMPLE_DTTM", y = "DISPLAYVALUE", color = "pollutant_abb", title = "Pollutants by type",
-                             hover_data=['pollutant_abb', 'SAMPLEDESC', 'U_SAMPLE_DTTM', 'DISPLAYVALUE','Limit'],
-                             labels = {"pollutant_abb": "Pollutant"}, template = "simple_white")
+            bar_fig = px.bar(dfx, x = "Date", y = "Metals (mg/L)", color = "Pollutant", title = "Pollutants by type",
+                             hover_data=['Pollutant', 'Company', 'Date', "Metals (mg/L)",'Limit'], 
+                             template = "simple_white")
         
         date_buttons = [
             {"count": 1, "step": "month", "stepmode": "backward", "label": "1MTD"},
